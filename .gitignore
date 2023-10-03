@@ -1,0 +1,8 @@
+__pycache__
+backup
+environments
+tmp
+venv
+dev-venv
+test-venv
+prod-venv
