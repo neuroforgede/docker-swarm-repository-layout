@@ -1,0 +1,2 @@
+These stack templates are just for demonstration purposes. Current versions of these can be found [here](https://github.com/neuroforgede/nothelm-charts).
+Also, these assume that you are on the Hetzner cloud but should give you an idea on how to organize your stack templates in this repository layout in general.
