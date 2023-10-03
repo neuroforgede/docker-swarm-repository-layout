@@ -1,0 +1,125 @@
+- name: Gather hcloud load_balancer infos
+  hetzner.hcloud.hcloud_load_balancer_info:
+  register: hcloud_load_balancer_info_output
+
+- set_fact:
+    swarm_lb_found: "{{ 
+      (swarm_lb_config | length) == 1
+      and
+      (
+            (swarm_lb_config[0].services | length) == 1
+        and ('health_check' in swarm_lb_config[0].services[0])
+        and ('http' in swarm_lb_config[0].services[0]['health_check'])
+        and ('certificates' in swarm_lb_config[0].services[0]['health_check']['http'])
+        and ('404' in swarm_lb_config[0].services[0]['health_check']['http']['certificates'])
+      )
+      }}"
+  vars:
+    swarm_lb_config: "{{ hcloud_load_balancer_info_output.hcloud_load_balancer_info | selectattr('name', 'equalto', 'swarmlb') | list }}"
+
+- name: Create a basic Load Balancer
+  hetzner.hcloud.hcloud_load_balancer:
+    api_token: "{{ hcloud_token }}"
+    name: "swarmlb"
+    load_balancer_type: "{{ swarmsible_hetzner_loadbalancer_type }}"
+    location: "{{ swarmsible_hetzner_server_location }}"
+    state: present
+
+- name: "Add swarmlb to {{ swarmsible_hetzner_swarm_network_name }}"
+  hetzner.hcloud.hcloud_load_balancer_network:
+    api_token: "{{ hcloud_token }}"
+    network: "{{ swarmsible_hetzner_swarm_network_name }}"
+    load_balancer: "swarmlb"
+    ip: 192.168.0.2
+    state: present
+
+- name: Add swarm manager nodes to load balancer
+  hetzner.hcloud.hcloud_load_balancer_target:
+    api_token: "{{ hcloud_token }}"
+    type: label_selector
+    load_balancer: "swarmlb"
+    label_selector: swarm_role=manager
+    use_private_ip: true
+    state: present
+  when: "swarmsible_hetzner_managers_part_of_lb | bool"
+
+- name: Add swarm worker nodes to load balancer
+  hetzner.hcloud.hcloud_load_balancer_target:
+    api_token: "{{ hcloud_token }}"
+    type: label_selector
+    load_balancer: "swarmlb"
+    label_selector: swarm_role=worker
+    use_private_ip: true
+    state: present
+  when: "swarmsible_hetzner_managers_part_of_lb | bool"
+
+- name: Create certificate
+  hetzner.hcloud.hcloud_certificate:
+    name: "{{ swarmsible_hetzner_loadbalancer_certificate_name }}"
+    api_token: "{{ hcloud_token }}"
+    domain_names: "{{ swarmsible_hetzner_loadbalancer_certificate_domain_names }}"
+    state: present
+    type: 'managed'
+  when: "swarmsible_hetzner_loadbalancer_certificate_type == 'managed'"
+
+- name: Create Load Balancer service with Port 443 (work around, creating a new load balancer with health_check fails)
+  hetzner.hcloud.hcloud_load_balancer_service:
+    api_token: "{{ hcloud_token }}"
+    load_balancer: "swarmlb"
+    protocol: https
+    listen_port: 443
+    state: present
+    http:
+      redirect_http: true
+      certificates:
+        - "{{ swarmsible_hetzner_loadbalancer_certificate_name }}"
+  when: not swarm_lb_found | bool
+
+- name: Create Load Balancer service with Port 443
+  hetzner.hcloud.hcloud_load_balancer_service:
+    api_token: "{{ hcloud_token }}"
+    load_balancer: "swarmlb"
+    protocol: https
+    listen_port: 443
+    state: present
+    health_check:
+      http:
+        status_codes:
+          - "404"
+        tls: no
+    http:
+      redirect_http: true
+      certificates:
+        - "{{ swarmsible_hetzner_loadbalancer_certificate_name }}"
+
+- name: Gather hcloud load_balancer infos
+  hetzner.hcloud.hcloud_load_balancer_info:
+  register: hcloud_load_balancer_info_output
+
+- set_fact:
+    swarm_lb_ipv4_address: "{{ swarm_lb_config[0].ipv4_address }}"
+    swarm_lb_ipv6_address: "{{ swarm_lb_config[0].ipv6_address }}"
+  vars:
+    swarm_lb_config: "{{ hcloud_load_balancer_info_output.hcloud_load_balancer_info | selectattr('name', 'equalto', 'swarmlb') | list }}"
+
+- name: Add configured DNS A records
+  community.dns.hetzner_dns_record_set:
+    state: present
+    zone: "{{ item.zone }}"
+    record: "{{ item.record }}"
+    type: A
+    ttl: "{{ item.ttl }}"
+    value: "{{ swarm_lb_ipv4_address }}"
+    hetzner_token: "{{ hetzner_dns_token }}"
+  with_items: "{{ swarmsible_hetzner_loadbalancer_dns_A }}"
+
+- name: Add configured DNS AAAA records
+  community.dns.hetzner_dns_record_set:
+    state: present
+    zone: "{{ item.zone }}"
+    record: "{{ item.record }}"
+    type: AAAA
+    ttl: "{{ item.ttl }}"
+    value: "{{ swarm_lb_ipv6_address }}"
+    hetzner_token: "{{ hetzner_dns_token }}"
+  with_items: "{{ swarmsible_hetzner_loadbalancer_dns_AAAA }}"

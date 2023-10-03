@@ -1,0 +1,109 @@
+- name: Allow esp connections via ipv4
+  ufw:
+    rule: allow
+    proto: esp
+    src: "{{ hostvars[item]['docker_swarm_advertise_addr'] | default(hostvars[item]['host_ip'] | default(hostvars[item]['ansible_host'])) }}/32"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    comment: "docker swarm esp - host: {{ hostvars[item]['inventory_hostname'] }}"
+  with_items: "{{ groups['docker_swarm'] | default([]) }}"
+
+- name: Allow 2377 tcp connections via ipv4
+  ufw:
+    rule: allow
+    proto: tcp
+    src: "{{ hostvars[item]['docker_swarm_advertise_addr'] | default(hostvars[item]['host_ip'] | default(hostvars[item]['ansible_host'])) }}/32"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "2377"
+    comment: "docker swarm 2377 tcp - host: {{ hostvars[item]['inventory_hostname'] }}"
+  with_items: "{{ groups['docker_swarm'] | default([]) }}"
+
+- name: Allow 7946 udp connections via ipv4
+  ufw:
+    rule: allow
+    proto: udp
+    src: "{{ hostvars[item]['docker_swarm_advertise_addr'] | default(hostvars[item]['host_ip'] | default(hostvars[item]['ansible_host'])) }}/32"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "7946"
+    comment: "docker swarm 7946 udp - host: {{ hostvars[item]['inventory_hostname'] }}"
+  with_items: "{{ groups['docker_swarm'] | default([]) }}"
+
+- name: Allow 7946 tcp connections via ipv4
+  ufw:
+    rule: allow
+    proto: tcp
+    src: "{{ hostvars[item]['docker_swarm_advertise_addr'] | default(hostvars[item]['host_ip'] | default(hostvars[item]['ansible_host'])) }}/32"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "7946"
+    comment: "docker swarm 7946 tcp - host: {{ hostvars[item]['inventory_hostname'] }}"
+  with_items: "{{ groups['docker_swarm'] | default([]) }}"
+
+- name: Allow 4789 udp connections via ipv4
+  ufw:
+    rule: allow
+    proto: udp
+    src: "{{ hostvars[item]['docker_swarm_advertise_addr'] | default(hostvars[item]['host_ip'] | default(hostvars[item]['ansible_host'])) }}/32"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "4789"
+    comment: "docker swarm 4789 udp - host: {{ hostvars[item]['inventory_hostname'] }}"
+  with_items: "{{ groups['docker_swarm'] | default([]) }}"
+
+# if we use a subnet, we must change this role accordingly
+
+
+- name: Allow esp connections via ipv4
+  ufw:
+    rule: allow
+    proto: esp
+    src: "{{ item.src }}"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    comment: "docker swarm esp - source: {{ item.name }}"
+  with_items: "{{ docker_swarm_trusted_sources | default([]) }}"
+
+- name: Allow 2377 tcp connections via ipv4
+  ufw:
+    rule: allow
+    proto: tcp
+    src: "{{ item.src }}"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "2377"
+    comment: "docker swarm 2377 tcp - source: {{ item.name }}"
+  with_items: "{{ docker_swarm_trusted_sources | default([]) }}"
+
+- name: Allow 7946 udp connections via ipv4
+  ufw:
+    rule: allow
+    proto: udp
+    src: "{{ item.src }}"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "7946"
+    comment: "docker swarm 7946 udp - source: {{ item.name }}"
+  with_items: "{{ docker_swarm_trusted_sources | default([]) }}"
+
+- name: Allow 7946 tcp connections via ipv4
+  ufw:
+    rule: allow
+    proto: tcp
+    src: "{{ item.src }}"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "7946"
+    comment: "docker swarm 7946 tcp - source: {{ item.name }}"
+  with_items: "{{ docker_swarm_trusted_sources | default([]) }}"
+
+- name: Allow 4789 udp connections via ipv4
+  ufw:
+    rule: allow
+    proto: udp
+    src: "{{ item.src }}"
+    to: "{{ docker_swarm_advertise_addr | default(host_ip | default(ansible_host)) }}"
+    port: "4789"
+    comment: "docker swarm 4789 udp - source: {{ item.name }}"
+  with_items: "{{ docker_swarm_trusted_sources | default([]) }}"
+
+- name: Allow 9323 metrics connections via local bridge networks
+  ufw:
+    rule: allow
+    proto: tcp
+    src: "172.16.0.0/12"
+    to: "172.16.0.0/12"
+    port: "9323"
+    comment: "docker metrics on 9323/tcp"

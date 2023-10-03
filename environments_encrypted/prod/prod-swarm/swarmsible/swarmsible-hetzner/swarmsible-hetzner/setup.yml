@@ -1,0 +1,19 @@
+---
+
+- name: setup swarm
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - "{{ swarmsible_vars_path }}/hcloud_token.yml"
+    - "{{ swarmsible_vars_path }}/swarm_config.yml"
+    - "{{ swarmsible_vars_path }}/hetzner_dns_token.yml"
+  roles:
+    - docker-swarm-hetzner-firewalls
+    - docker-swarm-hetzner-networks
+    - docker-swarm-hetzner-ssh-keys
+    - docker-swarm-hetzner-manager-servers
+    - docker-swarm-hetzner-worker-servers
+    - docker-swarm-hetzner-loadbalancers
+
+  

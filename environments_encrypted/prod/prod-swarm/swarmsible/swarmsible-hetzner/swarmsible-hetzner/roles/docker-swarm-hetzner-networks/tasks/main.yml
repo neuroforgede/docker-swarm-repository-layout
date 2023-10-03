@@ -1,0 +1,33 @@
+- name: "Create {{ swarmsible_hetzner_swarm_network_name }} network"
+  hcloud_network:
+    api_token: "{{ hcloud_token }}"
+    name: "{{ swarmsible_hetzner_swarm_network_name }}"
+    ip_range: 192.168.0.0/16
+    state: present
+
+- name: Create auxiliary subnetwork
+  hcloud_subnetwork:
+    api_token: "{{ hcloud_token }}"
+    network: "{{ swarmsible_hetzner_swarm_network_name }}"
+    ip_range: 192.168.0.0/24
+    network_zone: eu-central
+    type: cloud
+    state: present
+
+- name: Create manager subnetwork
+  hcloud_subnetwork:
+    api_token: "{{ hcloud_token }}"
+    network: "{{ swarmsible_hetzner_swarm_network_name }}"
+    ip_range: 192.168.1.0/24
+    network_zone: eu-central
+    type: cloud
+    state: present
+
+- name: Create worker subnetwork
+  hcloud_subnetwork:
+    api_token: "{{ hcloud_token }}"
+    network: "{{ swarmsible_hetzner_swarm_network_name }}"
+    ip_range: 192.168.2.0/24
+    network_zone: eu-central
+    type: cloud
+    state: present

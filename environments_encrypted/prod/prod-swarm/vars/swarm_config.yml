@@ -1,0 +1,31 @@
+swarmsible_hetzner_manager_count: 3
+swarmsible_hetzner_manager_server_type: cx21
+
+swarmsible_hetzner_worker_count: 0
+swarmsible_hetzner_worker_server_type: cx21
+
+swarmsible_hetzner_server_image: ubuntu-22.04
+swarmsible_hetzner_server_location: nbg1
+
+swarmsible_hetzner_loadbalancer_type: lb11
+swarmsible_hetzner_loadbalancer_dns_A:
+    - zone: "some.tld"
+      record: "*.some.tld"
+      ttl: "84600"
+swarmsible_hetzner_loadbalancer_dns_AAAA:
+  - zone: "some.tld"
+    record: "*.some.tld"
+    ttl: "84600"
+swarmsible_hetzner_loadbalancer_certificate_name: "swarmlb-certs"
+swarmsible_hetzner_loadbalancer_certificate_domain_names: 
+  - "*.some.tld"
+  - "*.mgmt.some.tld"
+swarmsible_hetzner_loadbalancer_certificate_type: 'managed'
+
+swarmsible_hetzner_managers_part_of_lb: true
+
+swarmsible_swarmsible_hetzner_ansible_root_ssh_key_name: ansible_root_rsa
+
+swarmsible_hetzner_ansible_root_ssh_key: "{{ CWD }}/ssh_keys/root_rsa.pub"
+
+swarmsible_hetzner_swarm_network_name: swarm_network

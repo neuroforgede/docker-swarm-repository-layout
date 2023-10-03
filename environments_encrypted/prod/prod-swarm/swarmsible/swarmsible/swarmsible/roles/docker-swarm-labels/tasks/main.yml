@@ -1,0 +1,9 @@
+---
+
+- name: set docker swarm labels
+  docker_node:
+    labels: "{{ hostvars[item]['docker_swarm_labels'] }}"
+    labels_state: replace
+    hostname: "{{ hostvars[item]['inventory_hostname'] }}"
+  when: inventory_hostname == docker_swarm_main_manager
+  with_items: "{{ groups['docker_swarm'] | default([]) }}"

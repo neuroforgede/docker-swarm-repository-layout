@@ -1,0 +1,15 @@
+# Group by a location with prefix e.g. "hcloud_location_nbg1"
+# and image_os_flavor without prefix and separator e.g. "ubuntu"
+# and status with prefix e.g. "server_status_running"
+plugin: hcloud
+keyed_groups:
+  - key: location
+    prefix: hcloud_location
+  - key: image_os_flavor
+    separator: ""
+  - key: status
+    prefix: server_status
+  - key: labels.swarm_role
+    prefix: docker_swarm
+    parent_group: docker_swarm
+

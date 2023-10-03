@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# from https://stackoverflow.com/questions/1203583/how-do-i-rename-a-bash-function
+function copy_function() {
+    declare old="$1"
+    declare new="$2"
+    # input checks:
+    if [[ ! "$old" =~ ^[a-zA-Z0-9._-]+$ ]] ; then
+        printf >&2 'copy_function: %q is (probably) not a valid function name\n' "$old"
+        return 1
+    elif [[ ! "$new" =~ ^[a-zA-Z0-9._-]+$ ]] ; then
+        printf >&2 'copy_function: %q is (probably) not a valid function name\n' "$new"
+        return 1
+    fi
+    # find the definition of the existing function:
+    declare def ; def="$(declare -fp "$old")" || return
+    # create an alias, in order to substitute $old for $new in function body:
+    declare former_alias="$(alias "$old" 2>/dev/null)"
+    alias "$old=$new"
+    # define the function $new:
+    eval "${def/#$old ()/$new ()}"
+    # remove the alias, restoring the former one if needed:
+    unalias "$old"
+    [ -n "$former_alias" ] && eval "$former_alias" || true
+}
+
+rename_function() {
+    copy_function "$@" || return
+    unset -f "$1"
+}
+
+source ../../prod-venv/bin/activate
+rename_function "deactivate" "deactivate_venv"
+
+MANAGER_IP=$(HCLOUD_TOKEN=$(yq -r .hcloud_token vars/hcloud_token.yml) ansible-inventory -i inventory/ --list | yq -r '._meta.hostvars."manager-1".ipv4')
+
+export DOCKER_HOST=ssh://$(whoami)@$MANAGER_IP
+ORIG_PS1="$PS1"
+
+PS1="[docker@ssh://$(whoami)@$MANAGER_IP]$PS1"
+
+function deactivate () {
+    unset DOCKER_HOST
+    unset deactivate
+    PS1="$ORIG_PS1"
+    deactivate_venv
+}
