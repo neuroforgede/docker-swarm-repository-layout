@@ -107,7 +107,7 @@ This folder contains utility scripts to work with the docker swarm on your CLI. 
 
 ### files/all/ssh_files/developer_ssh_keys
 
-This contains all public ssh keys of users that should have remote access to the swarm. Thi does not necessarily have to be the same as the contents of the age_recipients.txt. Note that these ssh keys also have to be set up in the inventory setup in order to be picked up.
+This contains all public ssh keys of users that should have remote access to the swarm. This does not necessarily have to be the same as the contents of the age_recipients.txt. Note that these ssh keys also have to be set up in the inventory setup in order to be picked up.
 
 ### inventory
 
